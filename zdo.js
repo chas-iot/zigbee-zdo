@@ -326,7 +326,7 @@ zdoParser[zci.IEEE_ADDRESS_REQUEST] = function(frame, reader) {
 };
 
 zdoDump[zci.IEEE_ADDRESS_REQUEST] = function(frame) {
-  return `Addr:${frame.addr16}`;
+  return `Addr:${frame.addr16}, requestType:${frame.requestType}, startIndex:${frame.startIndex}`;
 };
 
 zdoBuilder[zci.MANAGEMENT_BIND_REQUEST] = function(frame, builder) {
@@ -421,7 +421,7 @@ zdoParser[zci.NETWORK_ADDRESS_REQUEST] = function(frame, reader) {
 };
 
 zdoDump[zci.NETWORK_ADDRESS_REQUEST] = function(frame) {
-  return `Addr:${frame.addr64}`;
+  return `Addr:${frame.addr64}, requestType:${frame.requestType}, startIndex:${frame.startIndex}`;
 };
 
 zdoBuilder[zci.SIMPLE_DESCRIPTOR_REQUEST] = function(frame, builder) {
@@ -470,15 +470,13 @@ zdoParser[zci.NETWORK_ADDRESS_RESPONSE] = function(frame, reader) {
   frame.nwkAddr16 = swapHex(reader.nextString(2, 'hex'));
   if (reader.offset < reader.buf.length) {
     frame.numAssocDev = reader.nextUInt8();
+  }
+  if (reader.offset < reader.buf.length) {
     frame.startIndex = reader.nextUInt8();
     frame.assocAddr16 = [];
     for (let i = 0; i < frame.numAssocDev; i++) {
       frame.assocAddr16[i] = swapHex(reader.nextString(2, 'hex'));
     }
-  } else {
-    frame.numAssocDev = 0;
-    frame.startIndex = 0;
-    frame.assocAddr16 = [];
   }
 };
 
