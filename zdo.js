@@ -441,22 +441,24 @@ zdoDump[zci.SIMPLE_DESCRIPTOR_REQUEST] = function(frame) {
 zdoBuilder[zci.NETWORK_ADDRESS_RESPONSE] =
 zdoBuilder[zci.IEEE_ADDRESS_RESPONSE] = function(frame, builder) {
   assert(typeof frame.status === 'number' && frame.status >= 0 & frame.status <= 255, 'Must provide the status');
-  assert(typeof frame.nwkAddr64 !== 'undefined', 'Must provide the short address requested');
-  assert(typeof frame.nwkAddr16 !== 'undefined', 'Must provide the full address requested');
-  assert(frame.requestType === 0 || frame.requestType === 1, 'Must provide the original request type');
+  assert(typeof frame.nwkAddr64 !== 'undefined', 'Must provide the full address (nwkAddr64)');
+  assert(typeof frame.nwkAddr16 !== 'undefined', 'Must provide the short address (nwkAddr16)');
   builder.appendUInt8(frame.status);
   builder.appendString(swapHex(frame.nwkAddr64), 'hex');
   builder.appendString(swapHex(frame.nwkAddr16), 'hex');
 
-  // FIXME
-  //    this assumes that there are fewer devices than the maximum that the message frame supports
-  //    this will break, so is only a first approximation
-  if (frame.requestType === 1) {
-    assert(typeof frame.addrList === 'object' && frame.addrList.length > 0, 'Must provide an array of addr16');
-    builder.appendUInt8(frame.assocAddr16.length);   // numAssocDev
-    builder.appendUInt8(0);   // startIndex
-    for (const addr16 of frame.assocAddr16) {
-      builder.appendString(swapHex(addr16), 'hex');
+  if (typeof frame.numAssocDev !== 'undefined') {
+    builder.appendUInt8(frame.numAssocDev);
+    if (frame.numAssocDev > 0) {
+      assert(typeof frame.startIndex !== 'undefined', 'Must provide the StartIndex');
+      assert(typeof frame.assocAddr16 !== 'undefined', 'Must provide the NWKAddrAssocDevList (assocAddr16)');
+      assert(frame.numAssocDev === frame.assocAddr16.length, 'NumAssocDev must equal the length of the NWKAddrAssocDevList (assocAddr16)');
+      builder.appendUInt8(frame.startIndex);
+
+      // it is the responsibility of the caller to ensure that the number of addresses does not exceed the maximum message size
+      for (const addr16 of frame.assocAddr16) {
+        builder.appendString(swapHex(addr16), 'hex');
+      }
     }
   }
 };
